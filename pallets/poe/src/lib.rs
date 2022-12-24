@@ -1,6 +1,5 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
-// Re-export pallet items so that they can be accessed from the crate namespace.
 pub use pallet::*;
 
 #[frame_support::pallet]
@@ -15,13 +14,16 @@ pub mod pallet {
 		#[pallet::constant]
 		type MaxClaimLength: Get<u32>;
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
-		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
+
+		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 	}
 
 	#[pallet::pallet]
 	#[pallet::generate_store(pub(super) trait Store)]
 	pub struct Pallet<T>(_);
 
+	#[pallet::storage]
 	pub type Proofs<T: Config> = StorageMap<
 		_,
 		Blake2_128Concat,
@@ -70,7 +72,7 @@ pub mod pallet {
 				.map_err(|_| Error::<T>::ClaimTooLong)?;
 
 			// Verify that the specified claim has not already been stored.
-			ensure!(!Claims::<T>::contains_key(&bounded_claim), Error::<T>::ProofAlreadyExist);
+			ensure!(!Proofs::<T>::contains_key(&bounded_claim), Error::<T>::ProofAlreadyExist);
 
 			// Get the block number from the FRAME System pallet.
 			let current_block = <frame_system::Pallet<T>>::block_number();
@@ -107,6 +109,7 @@ pub mod pallet {
 			Ok(().into())
 		}
 
+		#[pallet::weight(0)]
 		pub fn transfer_claim(
 			origin: OriginFor<T>,
 			claim: Vec<u8>,
