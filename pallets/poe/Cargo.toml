@@ -1,5 +1,5 @@
 [package]
-name = "poe-pallet"
+name = "pallet-poe"
 version = "4.0.0-dev"
 description = "Home work"
 edition = "2021"
